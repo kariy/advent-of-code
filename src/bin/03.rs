@@ -25,9 +25,19 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    let name = "kari".to_string();
-    println!("{}", name.len());
-    None
+    let mut max = 0;
+    let mut lines = input.lines();
+
+    while let (Some(line1), Some(line2), Some(line3)) = (lines.next(), lines.next(), lines.next()) {
+        for item in line1.chars() {
+            if let (Some(_), Some(_)) = (line2.find(item), line3.find(item)) {
+                max += get_item_priority(&item);
+                break;
+            }
+        }
+    }
+
+    Some(max)
 }
 
 fn main() {
@@ -49,6 +59,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let input = advent_of_code::read_file("examples", 3);
-        assert_eq!(part_two(&input), None);
+        assert_eq!(part_two(&input), Some(70));
     }
 }
