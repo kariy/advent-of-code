@@ -109,6 +109,26 @@ impl Ship {
         }
     }
 
+    fn move_cargo9001(&mut self, inst: &MoveTx) {
+        let mut to_move: Vec<String> = Vec::new();
+
+        for _ in 0..(inst.total as usize) {
+            let item_to_move = self
+                .0
+                .get_mut(&inst.from)
+                .expect("stack doesnt exists!")
+                .pop()
+                .expect("stack is empty!");
+
+            to_move.insert(0, item_to_move);
+        }
+
+        self.0
+            .get_mut(&inst.to)
+            .expect("stack doesnt exists!")
+            .append(&mut to_move);
+    }
+
     pub fn add_stack(&mut self, stack: &Vec<String>) {
         let id = self.total();
         self.0.insert(id, stack.to_owned());
@@ -137,8 +157,14 @@ pub fn part_one(input: &str) -> Option<String> {
     Some(answer)
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
-    None
+pub fn part_two(input: &str) -> Option<String> {
+    let mut answer = String::new();
+    let (mut ship, tx_list) = parse_input(input).unwrap();
+
+    tx_list.iter().for_each(|tx| ship.move_cargo9001(tx));
+    (0..ship.total()).for_each(|i| answer.push_str(ship.peek(i).unwrap()));
+
+    Some(answer)
 }
 
 fn main() {
