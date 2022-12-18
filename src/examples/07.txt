@@ -4,8 +4,6 @@ dir a
 14848514 b.txt
 8504156 c.dat
 dir d
-dir n
-dir m
 $ cd a
 $ ls
 dir e
@@ -23,11 +21,3 @@ $ ls
 8033020 d.log
 5626152 d.ext
 7214296 k
-$ cd ..
-$ cd m
-$ ls
-111 j
-$ cd ..
-$ cd n
-$ ls
-111 j

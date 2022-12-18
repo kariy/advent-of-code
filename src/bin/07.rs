@@ -34,23 +34,6 @@ impl Fs {
         }
     }
 
-    fn find(&self, dirname: &str) -> Option<&Dir> {
-        let Some((_, Node::D(d))) =&self.nodes.iter().enumerate().find(|(_, n)| match n {
-            Node::D(d) => {
-                if d.name == dirname {
-                    true
-                } else {
-                    false
-                }
-            }
-            Node::F(_) => false,
-        }) else {
-            return None;
-        };
-
-        Some(d)
-    }
-
     fn get_dir(&self, dir: usize) -> Option<&Dir> {
         let Node::D(d) = &self.nodes[dir] else {
             return None;
@@ -163,14 +146,14 @@ impl Dir {
     }
 }
 
-fn find_dir_with_size(fs: &Fs, dir: usize, total: &mut Box<u32>) -> u32 {
+fn do_part_one(fs: &Fs, dir: usize, total: &mut Box<u32>) -> u32 {
     let node = fs.get_dir(dir).unwrap();
 
     let mut size = 0;
 
     for n in node.children.iter() {
         match &fs.nodes[*n] {
-            Node::D(_) => size += find_dir_with_size(fs, *n, total),
+            Node::D(_) => size += do_part_one(fs, *n, total),
             Node::F(f) => size += f.size,
         }
     }
@@ -182,17 +165,57 @@ fn find_dir_with_size(fs: &Fs, dir: usize, total: &mut Box<u32>) -> u32 {
     size
 }
 
+const TOTAL_SPACE: u32 = 70000000;
+
+fn get_total_space(fs: &Fs, dir: usize) -> u32 {
+    let node = fs.get_dir(dir).unwrap();
+
+    let mut size = 0;
+    for n in node.children.iter() {
+        match &fs.nodes[*n] {
+            Node::D(_) => size += get_total_space(fs, *n),
+            Node::F(f) => size += f.size,
+        }
+    }
+
+    size
+}
+
+fn do_part_two(fs: &Fs, dir: usize, used_space: u32, to_delete: &mut Box<u32>) -> u32 {
+    let node = fs.get_dir(dir).unwrap();
+
+    let mut size = 0;
+    for n in node.children.iter() {
+        match &fs.nodes[*n] {
+            Node::D(_) => size += do_part_two(fs, *n, used_space, to_delete),
+            Node::F(f) => size += f.size,
+        }
+    }
+
+    let space_free = (TOTAL_SPACE - used_space) + size;
+    if space_free >= 30000000 {
+        if **to_delete == 0 || size < **to_delete {
+            **to_delete = size;
+        }
+    }
+
+    size
+}
+
 pub fn part_one(input: &str) -> Option<u32> {
     let fs = Fs::from_input(input);
     let mut total = Box::new(0);
-    find_dir_with_size(&fs, fs.root, &mut total);
-    println!("{:?}", fs.find("nzpvt"));
-
+    do_part_one(&fs, fs.root, &mut total);
     Some(*total)
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    let fs = Fs::from_input(input);
+    let mut smallest_to_delete = Box::new(0);
+    let used = get_total_space(&fs, fs.root);
+    do_part_two(&fs, fs.root, used, &mut smallest_to_delete);
+
+    Some(*smallest_to_delete)
 }
 
 fn main() {
@@ -208,12 +231,12 @@ mod tests {
     #[test]
     fn test_part_one() {
         let input = advent_of_code::read_file("examples", 7);
-        assert_eq!(part_one(&input), Some(95437 + 2 * 111));
+        assert_eq!(part_one(&input), Some(95437));
     }
 
     #[test]
     fn test_part_two() {
         let input = advent_of_code::read_file("examples", 7);
-        assert_eq!(part_two(&input), None);
+        assert_eq!(part_two(&input), Some(24933642));
     }
 }
